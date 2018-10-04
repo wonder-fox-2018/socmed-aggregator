@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title></title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+    <script src="https://cdn.rawgit.com/oauth-io/oauth-js/c5af4519/dist/oauth.js"></script>
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css" integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-social/4.12.0/bootstrap-social.min.css">
+    <style>
+      body {
+        padding-top: 65px;
+      }
+
+      .navbar-right p {
+        float: right;
+        line-height: 50px;
+        color: white;
+        margin-left: 10px;
+        margin-bottom: 0px;
+      }
+
+      .row {
+        display: flex;
+
+      }
+
+      .row > div {
+        flex: 1;
+        /* border: 1px solid grey; */
+        margin-top:10px;
+      }
+
+      .row-body {
+        height: 100vh;
+      }
+
+      .row-body .box {
+        border-right: 1px solid #eee;
+      }
+
+      .row-body div:last-child {
+        border-right: none;
+      }
+
+      input.search, input.newRepo {
+        margin-bottom: 10px;
+        padding: 10px;
+        width: 100%;
+      }
+      
+      #github-button, #signout-button {
+        color: black;
+        background-color: white;
+      }
+      .transBtn {
+        color: black;
+        background-color: transparent;
+      }
+      .transBtn:hover {
+        background-color: lightgrey;
+      }
+      .unstarBtn {
+        color: black;
+        background-color: transparent;
+      }
+      .starBtn {
+        color: lightgrey;
+        background-color: transparent;
+      }
+    </style>
+  </head>
+  <body>
+
+    <div class="container">
+      <div class="row">
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+          <div class="container">
+            <a class="navbar-brand" href="#">HacktivGit</a>
+            <div class="navbar-right">
+              <a id="github-button" class="ifSignedOut btn btn-block btn-social btn-github">
+                <i class="fab fa-github"></i> Sign in with Github
+              </a>
+              <a id="signout-button" class="ifSignedIn btn btn-block btn-social btn-github my-auto">
+                <i class="fab fa-github"></i> Sign out
+              </a>
+            </div>
+          </div>
+        </nav>
+      </div>
+
+      <div class="ifSignedIn row row-body ">
+        <div class="col-md-3 box">
+          <div class="row mb-4">
+            <div class="col-12 text-center" style="font-size:1vw;">
+              <button id='allRepo' class="transBtn btn mx-2" title="My Repositories"><i class="fas fa-archive"></i></button>
+              <button id='starRepo' class="transBtn btn mx-2" title="Starred Repositories"><i class="fas fa-star"></i></button>
+            </div>
+          </div>
+          <div class="row mb-4">
+            <div class="col-1"></div>
+            <div class="col-10">
+              <input class='newRepo' type="text" id='name' placeholder="Name">
+              <input class='newRepo' type="text" id='desc' placeholder="Description">
+              <button class="transBtn btn" id='addNewRepo' style="width:100%">+ New Repo</button>
+            </div>
+            <div class="col-1"></div>
+          </div>
+          <div class="row">
+            <div class="col-1"></div>
+            <div class="text-center col-10 border-bottom mb-4"><h4>Featured Users</h4></div>
+            <div class="col-1"></div>
+            <ul class='col-12' style="list-style-type:none">
+              <li><a href="#" onclick="listByUsername('windiana')">windiana</a></li>
+              <li><a href="#" onclick="listByUsername('dmtrxw')">dmtrxw</a></li>
+            </ul>
+          </div>
+        </div>
+        <div class="col-md-5 box">
+          <input class="search" type="text" placeholder="Search..."></input>
+          <div class="list">
+          </div>
+        </div>
+        <div class="col-md-4 box">
+          <h2 id="reponame"></h2>
+          <p id="author"></p>
+          <p id="description"></p>
+        </div>
+      </div>
+      <div class="ifSignedOut row row-body" style="margin-top:10vh">
+        <div class="col-12 text-center">
+          <i class="fab fa-github" style="font-size:25vw;"></i><br><br>
+          <h3>HacktivGit is an app that will help you manage your GitHub.<br>Please sign in to continue.</h3>
+        </div>
+      </div>
+
+    </div>
+    <script>
+      var name = ''
+      var authUsername = ''
+      var openTab = ''
+
+      $('#github-button').on('click', function() {
+        OAuth.initialize('dAq4nPWrN2lp7NUTlCDMozduTU8')
+        OAuth.popup('github').done(function(result) {
+          $.ajax({
+            url: 'http://localhost:3000/users/',
+            headers: {
+              access_token: result.access_token
+            }
+          })
+          .done(data => {
+            localStorage.setItem('token', data.token)
+            listAll()
+          })
+          .fail(err => {
+            console.log(err)
+          })
+        })
+      })
+
+      $('#signout-button').on('click', function () {
+        localStorage.clear()
+        $('.ifSignedIn').hide()
+        $('.ifSignedOut').show()
+      })
+      
+      $('document').ready(function () {
+        listAll()
+      })
+
+      $('.search').keyup(() => {
+        let keyword = $('.search').val()
+        if (keyword.length > 0) {
+          if (openTab === 'all') {
+            searchByName(keyword)
+          } else {
+            listStarredFilter(keyword)
+          }
+        } else {
+          if (name === authUsername) {
+            if (openTab === 'all') {
+              listAll()
+            } else {
+              listStarred()
+            }
+          } else {
+            listByUsername(name)
+          }
+        }
+      })
+
+      $('#allRepo').on('click', function () {
+        listAll()
+      })
+
+      $('#starRepo').on('click', function () {
+        listStarred()
+      })
+
+      $('#addNewRepo').on('click', function () {
+        if ($('#name').val() !== '') {
+          create($('#name').val(), $('#desc').val())
+        }
+      })
+
+      function listStarred () {
+        openTab = 'star'
+        $.ajax({
+          url: 'http://localhost:3000/repos/starred',
+          dataType: 'json',
+          headers: { access_token: localStorage.getItem('token') }
+        })
+        .done(data => {
+          $('.ifSignedIn').show()
+          $('.ifSignedOut').hide()
+          if (data.list.length > 0) {
+            $('.list').text("")
+            $('.list').append(
+              `<div class='text-center border-bottom'><br><h5>Your Starred Repositories</h5></div>`
+            )
+            data.list.forEach(datum => {
+              if (!datum.description) {
+                datum.description = ''
+              }
+              $('.list').append(
+                `<div class='row'>
+                  <div class="card-body col-10">
+                      <h5 class="card-title">
+                          <a href="#" onclick='more("${datum.name}","${datum.description}","${datum.owner.login}")'>${datum.name}</a>
+                      </h5>
+                          <p class="card-text">${datum.description}</p>
+                      <p class="card-text">${datum.stargazers_count} Star(s)</p>
+                  </div>
+                  <div class='col-2'>
+                    <button class='btn unstarBtn' title='Unstar' id='${datum.id}' onclick='starToggle("${datum.id}", "${datum.name}")'><i class="fas fa-star"></i></button>
+                  </div>
+                </div>`
+              )
+            })
+          } else {
+            $('.list').text("")
+            $('.list').append(
+              `<div class='text-center'>
+                <i class="fas fa-star" style="font-size:5vw; margin-top:2vh"></i><br><br>
+                <h6>Oops, it seems that you haven't starred any repositories.<br>If you have, those repositories will be displayed here.</h6>
+              </div>`
+            )
+          }
+          
+        })
+        .fail((err) => {
+          $('.ifSignedIn').hide()
+          $('.ifSignedOut').show()
+          console.log(err)
+        })
+      }
+
+      function listAll () {
+        openTab = 'all'
+        $.ajax({
+          url: 'http://localhost:3000/repos/',
+          dataType: 'json',
+          headers: { access_token: localStorage.getItem('token') }
+        })
+        .done(data => {
+          $('.ifSignedIn').show()
+          $('.ifSignedOut').hide()
+          if (data.list.length > 0) {
+            $('.list').text("")
+            $('.list').append(
+              `<div class='text-center border-bottom'><br><h5>Your Repositories</h5></div>`
+            )
+            name = data.list[0].owner.login
+            authUsername = data.list[0].owner.login
+            data.list.forEach(datum => {
+              if (!datum.description) {
+                datum.description = ''
+              }
+              $('.list').append(
+                `<div class="card-body">
+                    <h5 class="card-title">
+                        <a href="#" onclick='more("${datum.name}","${datum.description}","${datum.owner.login}")'>${datum.name}</a>
+                    </h5>
+                        <p class="card-text">${datum.description}</p>
+                    <p class="card-text">${datum.stargazers_count} Star(s)</p>
+                </div>`
+              )
+            })
+          } else {
+            $('.list').text("")
+            $('.list').append(
+              `<div class='text-center'>
+                <i class="fas fa-archive" style="font-size:5vw; margin-top:2vh"></i><br><br>
+                <h6>Oops, it seems that you haven't made any repositories.<br>If you have, those repositories will be displayed here.</h6>
+              </div>`
+            )
+          }
+          
+        })
+        .fail((err) => {
+          $('.ifSignedIn').hide()
+          $('.ifSignedOut').show()
+          console.log(err)
+        })
+      }
+
+      function searchByName (keyword) {
+        $.ajax({
+          url: `http://localhost:3000/repos/searchByName/${keyword}/${name}`,
+          dataType: 'json',
+          headers: { access_token: localStorage.getItem('token') }
+        })
+        .done(data => {
+          if (data.list.items.length > 0) {
+            $('.list').text("")
+            $('.list').append(
+              `<div class='text-center border-bottom'><br><h5>Search Result</h5></div>`
+            )
+            data.list.items.forEach(datum => {
+              if (!datum.description) {
+                datum.description = ''
+              }
+              $('.list').append(
+                `<div class="card-body">
+                    <h5 class="card-title">
+                        <a href="#" onclick='more("${datum.name}","${datum.description}","${datum.owner.login}")'>${datum.name}</a>
+                    </h5>
+                        <p class="card-text">${datum.description}</p>
+                    <p class="card-text">${datum.stargazers_count} Star(s)</p>
+                </div>`
+              )
+            })
+          } else {
+            $('.list').text("")
+            $('.list').append(
+              `<div class='text-center'>
+                <i class="fas fa-dizzy" style="font-size:5vw; margin-top:2vh"></i><br><br>
+                <h6>Oops, it seems that we can't find anything like that</h6>
+              </div>`
+            )
+          }
+        })
+        .fail(err => {
+          console.log(err)
+        })
+      }
+
+      function listByUsername (username) {
+        name = username
+        openTab = 'all'
+        $.ajax({
+          url: `http://localhost:3000/repos/${username}`,
+          dataType: 'json',
+        })
+        .done(data => {
+          if (typeof data.list === 'object') {
+            $('.list').text("")
+            $('.list').append(
+              `<div class='text-center'>
+                <i class="fas fa-sad-cry my-4" style='font-size:10vw;'></i>
+                <h5>Sorry, but it seems that the API rate limit has exceeded so we can't display the data at this very moment, please come back later</h5>
+              </div>`
+            )
+          } else {
+            if (data.list.length > 0) {
+              $('.list').text("")
+              $('.list').append(
+                `<div class='text-center border-bottom pb-2'><br><h5>All Repositories</h5><h7>owned by ${username}</h7></div>`
+              )
+              
+              data.list.forEach(datum => {
+                if (!datum.description) {
+                  datum.description = ''
+                }
+                $('.list').append(
+                  `<div class="card-body">
+                      <h5 class="card-title">
+                          <a href="#" onclick='more("${datum.name}","${datum.description}","${datum.owner.login}")'>${datum.name}</a>
+                      </h5>
+                          <p class="card-text">${datum.description}</p>
+                      <p class="card-text">${datum.stargazers_count} Star(s)</p>
+                  </div>`
+                )
+              })
+            } else {
+              $('.list').text("")
+              $('.list').append(
+                `<div class='text-center'>
+                  <i class="fas fa-archive" style="font-size:5vw; margin-top:2vh"></i><br><br>
+                  <h6>Oops, it seems that he/she hasn't made any repositories.<br>If he/she has, his/her repositories will be displayed here.</h6>
+                </div>`
+              )
+            }
+          }
+        })
+        .fail(err => {
+          console.log(err)
+        })
+      }
+
+      function listStarredFilter (keyword) {
+        $.ajax({
+          url: `http://localhost:3000/repos/filter`,
+          dataType: 'json',
+          method: 'post',
+          headers: { access_token: localStorage.getItem('token') },
+          data: { name: keyword }
+        })
+        .done(data => {
+          $('.list').text("")
+          $('.list').append(
+            `<div class='text-center border-bottom'><br><h5>Search Result</h5></div>`
+          )
+          if (data.list.length > 0) {
+            data.list.forEach(datum => {
+              if (!datum.description) {
+                datum.description = ''
+              }
+              $('.list').append(
+                `<div class='row'>
+                  <div class="card-body col-10">
+                      <h5 class="card-title">
+                          <a href="#" onclick='more("${datum.name}","${datum.description}","${datum.owner.login}")'>${datum.name}</a>
+                      </h5>
+                          <p class="card-text">${datum.description}</p>
+                      <p class="card-text">${datum.stargazers_count} Star(s)</p>
+                  </div>
+                  <div class='col-2'>
+                    <button class='btn unstarBtn' title='Unstar' id='${datum.id}' onclick='starToggle("${datum.id}", "${datum.name}")'><i class="fas fa-star"></i></button>
+                  </div>
+                </div>`
+              )
+            })
+          } else {
+            $('.list').text("")
+            $('.list').append(
+              `<div class='text-center'>
+                <i class="fas fa-dizzy" style="font-size:5vw; margin-top:2vh"></i><br><br>
+                <h6>Oops, it seems that we can't find anything like that</h6>
+              </div>`
+            )
+          }
+        })
+        .fail(err => {
+          console.log(err)
+        })
+      }
+
+      function starToggle (id, repoName) {
+        if ($(`#${id}`).hasClass("unstarBtn")) {
+          $.ajax({
+            url: `http://localhost:3000/repos/unstar/${authUsername}/${repoName}`,
+            dataType: 'json',
+            headers: { access_token: localStorage.getItem('token') },
+          })
+          .done(() => {
+            $(`#${id}`).removeClass('unstarBtn').addClass('starBtn').attr('title', 'Star')
+          })
+          .fail(err => {
+            console.log(err)
+          })
+        } else {
+          $.ajax({
+            url: `http://localhost:3000/repos/star/${authUsername}/${repoName}`,
+            dataType: 'json',
+            headers: { access_token: localStorage.getItem('token') },
+          })
+          .done(() => {
+            $(`#${id}`).removeClass('starBtn').addClass('unstarBtn').attr('title', 'Unstar')
+          })
+          .fail(err => {
+            console.log(err)
+          })
+        }
+      }
+
+      function more (repoName, description, ownerName) {
+        $('#reponame').text("")
+        $('#reponame').append(`<a target='_blank' href='https://github.com/${ownerName}/${repoName}'>${repoName}</a>`)
+        $('#author').text("")
+        $('#author').append(`by <a target='_blank' href='https://github.com/${ownerName}'>${ownerName}</a>`)
+        if (description.length > 0) {
+          $('#description').text("")
+          $('#description').append(description)
+          $('#description').addClass("border-top pt-3")
+        }
+      }
+
+      function create (name, desc) {
+        $.ajax({
+          url: `http://localhost:3000/repos/`,
+          method: 'post',
+          dataType: 'json',
+          headers: { access_token: localStorage.getItem('token') },
+          data: { name: name, description: desc }
+        })
+        .done(data => {
+          $('#name').val('')
+          $('#desc').val('')
+          listAll()
+        })
+        .fail(err => {
+          console.log(err)
+        })
+      }
+    </script>
+  </body>
+</html>
