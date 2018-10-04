@@ -45,6 +45,8 @@
                 </ul>
                 <div id="createrepoform">
                     <hr>
+                    <div id="createrepomessage"></div>
+                    <hr>
                     <h2 style="color: blue">Create new Repo</h2>
                     <form>
                         <div class="form-group">
@@ -115,7 +117,6 @@
             let data = result['data']
             $('.list').empty();
             data.forEach(repos =>{
-                console.log('per repo-->', repos)
                 $('.list').append(
                   ` <div class="card-body">
                         <h5 class="card-title">
@@ -180,7 +181,6 @@
         })
         .done((result)=>{
             let data = result.data[0]
-            console.log('data--->', data)
             $('.details').empty()
             $('.details').append(
                 `<div>
@@ -207,7 +207,6 @@
         let title = $('#titlerepo').val()
         let description = $('#descriptionrepo').val()
         let token = localStorage.getItem('token')
-        console.log('Hasil---->', title, description)
         $.ajax({
             method: 'POST',
             url: 'http://localhost:3005/repos/add',
@@ -221,10 +220,23 @@
         })
         .then(result=>{
             console.log('final---->', result)
+            createRepoSuccess(result.msg)
         })
         .catch(error=>{
             console.log('ERROR ADD REPO: ', error)
         })
+    }
+    // success message
+    function createRepoSuccess(input){
+        // $('#createrepomessage').html
+        $('#createrepomessage').empty()
+        $('#createrepomessage').append(
+            `<span class="badge badge-success">${input}</span>`
+        )
+        $('#createrepomessage').show()
+        setTimeout(function(){
+            $('#createrepomessage').hide()
+        },3000)
     }
 
     // logout
