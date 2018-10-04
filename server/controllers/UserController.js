@@ -98,6 +98,7 @@ class UserController {
 
     // google login
     static googleLogin(req,res){
+        // console.log('Hasil---->', req.body.googletoken)
         return new Promise( (resolve, reject)=>{
 			client.verifyIdToken({
 			idToken: req.body.googletoken,
@@ -113,6 +114,7 @@ class UserController {
 			})
         })
         .then(userid =>{
+            // console.log('OKKE')
             axios({
                 method: 'GET',
                 url: `https://www.googleapis.com/oauth2/v3/tokeninfo?id_token=${req.body.googletoken}`
@@ -142,13 +144,13 @@ class UserController {
                                 })
                             }
                         })
-                      }else if(user){
-                          let hash = hashPassword(process.env.DEFAULTPASSWORD)
+                      }else if(user === null){
+                          let hashpassword = hashPassword(process.env.DEFAULTPASSWORD)
                           // registration process
                           User.create({
                               name: datafromgoogle.name,
                               email: datafromgoogle.email,
-                              password: hash,
+                              password: hashpassword,
                               thirdpartylogin: 'yes'
                           })
                           .then(user=>{
@@ -178,6 +180,7 @@ class UserController {
                       }
                   })
                   .catch(error =>{
+                      console.log('TEST ERROR--->', err)
                       res.status(500).json({
                           msg: 'ERROR: ',error
                       })
