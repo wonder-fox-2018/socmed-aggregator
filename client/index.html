@@ -79,18 +79,13 @@
           <div class="container">
             <a class="navbar-brand" href="#">HacktivGit</a>
             <div class="navbar-right">
-              <a id="github-button" class="ifSignedOut btn btn-block btn-social btn-github">
-                <i class="fab fa-github"></i> Sign in with Github
-              </a>
-              <a id="signout-button" class="ifSignedIn btn btn-block btn-social btn-github my-auto">
-                <i class="fab fa-github"></i> Sign out
-              </a>
+              
             </div>
           </div>
         </nav>
       </div>
 
-      <div class="ifSignedIn row row-body ">
+      <div class="row row-body ">
         <div class="col-md-3 box">
           <div class="row mb-4">
             <div class="col-12 text-center" style="font-size:1vw;">
@@ -98,7 +93,7 @@
               <button id='starRepo' class="transBtn btn mx-2" title="Starred Repositories"><i class="fas fa-star"></i></button>
             </div>
           </div>
-          <div class="row mb-4">
+          <div class="row mb-4 ifSignedIn">
             <div class="col-1"></div>
             <div class="col-10">
               <input class='newRepo' type="text" id='name' placeholder="Name">
@@ -128,37 +123,11 @@
           <p id="description"></p>
         </div>
       </div>
-      <div class="ifSignedOut row row-body" style="margin-top:10vh">
-        <div class="col-12 text-center">
-          <i class="fab fa-github" style="font-size:25vw;"></i><br><br>
-          <h3>HacktivGit is an app that will help you manage your GitHub.<br>Please sign in to continue.</h3>
-        </div>
-      </div>
-
     </div>
     <script>
       var name = ''
       var authUsername = ''
       var openTab = ''
-
-      $('#github-button').on('click', function() {
-        OAuth.initialize('dAq4nPWrN2lp7NUTlCDMozduTU8')
-        OAuth.popup('github').done(function(result) {
-          $.ajax({
-            url: 'http://localhost:3000/users/',
-            headers: {
-              access_token: result.access_token
-            }
-          })
-          .done(data => {
-            localStorage.setItem('token', data.token)
-            listAll()
-          })
-          .fail(err => {
-            console.log(err)
-          })
-        })
-      })
 
       $('#signout-button').on('click', function () {
         localStorage.clear()
@@ -168,6 +137,7 @@
       
       $('document').ready(function () {
         listAll()
+        checkLogin()
       })
 
       $('.search').keyup(() => {
@@ -205,20 +175,39 @@
         }
       })
 
+      function checkLogin () {
+        $.ajax({
+          url: 'http://localhost:3000/users/check',
+          dataType: 'json',
+          headers: { access_token: localStorage.getItem('token') }
+        })
+        .done(data => {
+          if (data.isLogin) {
+            $('.ifSignedIn').show()
+            $('.ifSignedOut').hide()
+          } else {
+            $('.ifSignedIn').hide()
+            $('.ifSignedOut').show()
+          }
+        })
+        .catch(err => {
+          console.log(err)
+          $('.ifSignedIn').hide()
+          $('.ifSignedOut').show()
+        })
+      }
+
       function listStarred () {
         openTab = 'star'
         $.ajax({
           url: 'http://localhost:3000/repos/starred',
           dataType: 'json',
-          headers: { access_token: localStorage.getItem('token') }
         })
         .done(data => {
-          $('.ifSignedIn').show()
-          $('.ifSignedOut').hide()
           if (data.list.length > 0) {
             $('.list').text("")
             $('.list').append(
-              `<div class='text-center border-bottom'><br><h5>Your Starred Repositories</h5></div>`
+              `<div class='text-center border-bottom'><br><h5><b><i>ismailnagib</i></b>'s Starred Repositories</h5></div>`
             )
             data.list.forEach(datum => {
               if (!datum.description) {
@@ -233,11 +222,12 @@
                           <p class="card-text">${datum.description}</p>
                       <p class="card-text">${datum.stargazers_count} Star(s)</p>
                   </div>
-                  <div class='col-2'>
+                  <div class='col-2 ifSignedIn'>
                     <button class='btn unstarBtn' title='Unstar' id='${datum.id}' onclick='starToggle("${datum.id}", "${datum.name}")'><i class="fas fa-star"></i></button>
                   </div>
                 </div>`
               )
+              checkLogin()
             })
           } else {
             $('.list').text("")
@@ -251,8 +241,6 @@
           
         })
         .fail((err) => {
-          $('.ifSignedIn').hide()
-          $('.ifSignedOut').show()
           console.log(err)
         })
       }
@@ -262,15 +250,12 @@
         $.ajax({
           url: 'http://localhost:3000/repos/',
           dataType: 'json',
-          headers: { access_token: localStorage.getItem('token') }
         })
         .done(data => {
-          $('.ifSignedIn').show()
-          $('.ifSignedOut').hide()
           if (data.list.length > 0) {
             $('.list').text("")
             $('.list').append(
-              `<div class='text-center border-bottom'><br><h5>Your Repositories</h5></div>`
+              `<div class='text-center border-bottom'><br><h5><b><i>ismailnagib</i></b>'s Repositories</h5></div>`
             )
             name = data.list[0].owner.login
             authUsername = data.list[0].owner.login
@@ -300,8 +285,6 @@
           
         })
         .fail((err) => {
-          $('.ifSignedIn').hide()
-          $('.ifSignedOut').show()
           console.log(err)
         })
       }
@@ -310,7 +293,6 @@
         $.ajax({
           url: `http://localhost:3000/repos/searchByName/${keyword}/${name}`,
           dataType: 'json',
-          headers: { access_token: localStorage.getItem('token') }
         })
         .done(data => {
           if (data.list.items.length > 0) {
@@ -405,7 +387,6 @@
           url: `http://localhost:3000/repos/filter`,
           dataType: 'json',
           method: 'post',
-          headers: { access_token: localStorage.getItem('token') },
           data: { name: keyword }
         })
         .done(data => {
@@ -432,6 +413,7 @@
                   </div>
                 </div>`
               )
+              checkLogin()
             })
           } else {
             $('.list').text("")

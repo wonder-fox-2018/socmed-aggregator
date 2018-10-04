@@ -4,10 +4,10 @@ module.exports = {
 
     listAll: function (req, res) {
         let options = {
-            url: 'https://api.github.com/user/repos',
+            url: 'https://api.github.com/user/repos?affiliation=owner',
             headers: {
                 'User-Agent': 'request',
-                'Authorization': `token ${req.access_token}`
+                'Authorization': `token ${process.env.ACCESS_TOKEN}`
             }
         };
         
@@ -25,7 +25,7 @@ module.exports = {
             url: 'https://api.github.com/user/starred',
             headers: {
                 'User-Agent': 'request',
-                'Authorization': `token ${req.access_token}`
+                'Authorization': `token ${process.env.ACCESS_TOKEN}`
             }
         };
         
@@ -43,7 +43,7 @@ module.exports = {
             url: 'https://api.github.com/user/starred',
             headers: {
                 'User-Agent': 'request',
-                'Authorization': `token ${req.access_token}`
+                'Authorization': `token ${process.env.ACCESS_TOKEN}`
             }
         };
         
@@ -70,7 +70,7 @@ module.exports = {
             url: `https://api.github.com/search/repositories?q=${req.params.name}+user:${req.params.owner}+fork:true`,
             headers: {
                 'User-Agent': 'request',
-                'Authorization': `token ${req.access_token}`
+                'Authorization': `token ${process.env.ACCESS_TOKEN}`
             }
         };
 
@@ -88,7 +88,7 @@ module.exports = {
             url: 'https://api.github.com/user/repos',
             headers: {
                 'User-Agent': 'request',
-                'Authorization': `token ${req.access_token}`
+                'Authorization': `token ${process.env.ACCESS_TOKEN}`
             },
             body: JSON.stringify({
                 name: req.body.name,
@@ -127,7 +127,7 @@ module.exports = {
             url: `https://api.github.com/user/starred/${req.params.owner}/${req.params.repo}`,
             headers: {
                 'User-Agent': 'request',
-                'Authorization': `token ${req.access_token}`
+                'Authorization': `token ${process.env.ACCESS_TOKEN}`
             }
         };
 
@@ -145,7 +145,7 @@ module.exports = {
             url: `https://api.github.com/user/starred/${req.params.owner}/${req.params.repo}`,
             headers: {
                 'User-Agent': 'request',
-                'Authorization': `token ${req.access_token}`
+                'Authorization': `token ${process.env.ACCESS_TOKEN}`
             }
         };
 
