@@ -92,6 +92,11 @@ class UserController {
             })
         }
     }
+
+    // google login
+    static googleLogin(req,res){
+        
+    }
 }
 
 module.exports = UserController

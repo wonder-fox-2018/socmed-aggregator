@@ -3,6 +3,7 @@
 const express = require('express')
 const router = express.Router()
 const RepoController = require('../controllers/RepoController')
+const isLogin = require('../middlewares/isLogin')
 
 // get list of starred repo
 router.get('/lists', (req,res) =>{
@@ -15,7 +16,7 @@ router.post('/username', (req,res) =>{
 })
 
 // create repository
-router.post('/add', (req,res) =>{
+router.post('/add', isLogin,(req,res) =>{
     RepoController.createRepository(req,res)
 })
 
@@ -30,7 +31,7 @@ router.post('/details', (req,res)=>{
 })
 
 // unstar repository
-router.delete('/unstar', (req,res) =>{
+router.delete('/unstar', isLogin,(req,res) =>{
     RepoController.unstarRepository(req,res)
 })
 
