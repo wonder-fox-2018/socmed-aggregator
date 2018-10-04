@@ -52,6 +52,8 @@ class RepoController{
 
     // create repository
     static createRepository(req,res){
+        console.log('controller --->', req.body),
+        console.log('headers----->', req.headers)
         const options = {
             url : 'https://api.github.com/user/repos',
             headers : {
