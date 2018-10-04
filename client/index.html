@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="./css/bootstrap/css/bootstrap.css" />
+    <script
+    src="https://code.jquery.com/jquery-3.3.1.js"
+    integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60="
+    crossorigin="anonymous"></script>
+    <meta name="google-signin-scope" content="profile email">
+    <meta name="google-signin-client_id" content="628551800255-g2qnsf4gcs52oevo1qigl9pbn7ut2otg.apps.googleusercontent.com">
+    <script src="https://apis.google.com/js/platform.js" async defer></script>
+
+    <title>HacktivGit</title>
+  </head>
+  <body>
+      <nav class="navbar navbar-light bg-light">
+          <a class="navbar-brand" href="#">
+            HacktivGit
+          </a>
+          <div class="g-signin2" data-onsuccess="onSignIn" data-theme="dark"></div>
+          <a href="#" onclick="signOut();">Sign out</a>
+
+      </nav>
+              
+        </div>
+        <div class="container">
+            <div class="row">
+              <div class="col order-first">
+                  <div id="userlist">
+                    </div>
+                  <div id="formCreateRepo">
+                      <form action="" method="POST">
+                            <input class="form-control mr-sm-2" type="text" placeholder="Repo Name">
+                            <input class="form-control mr-sm-2" type="text" placeholder="Description">
+                      </form>
+                    </div>
+              </div>
+              <div class="col">
+                  <input id="myInput" class="form-control mr-sm-2" type="search" placeholder="Search..." aria-label="Search">
+                  <div id="repo-list">
+                  </div>
+              </div>
+              <div class="col order-last">
+                  <div id="repo-deskrip">
+                  </div>
+              </div>
+            </div>
+        </div>
+        
+
+       
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="./script.js" ></script>
+  </body>
+</html>
+
