@@ -219,7 +219,6 @@
             }
         })
         .then(result=>{
-            console.log('final---->', result)
             createRepoSuccess(result.msg)
         })
         .catch(error=>{
@@ -256,7 +255,6 @@
         console.log('Email: ' + profile.getEmail()); // This is null if the 'email' scope is not present.
 
         let id_token = googleUser.getAuthResponse().id_token;
-        // console.log('TOKEN---->', id_token)
         $.ajax({
             method: 'POST',
             url: 'http://localhost:3005/users/googlelogin',
@@ -265,12 +263,11 @@
             }
         })
         .done(result =>{
-            // console.log('RESULT---->', result)
             localStorage.setItem('token',result.token)
             $('#createrepoform').show()
             $('#logout').show()
             $('#googlelogin').hide()
-            
+
             // automatic google sign out from our app
             const auth2 = gapi.auth2.getAuthInstance();
                 auth2.signOut().then(function () {
