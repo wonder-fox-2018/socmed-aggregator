@@ -14,6 +14,7 @@ router.post('/register', (req,res) =>{
     UserController.userRegister(req,res)
 })
 
+// google login
 router.post('/googlelogin', (req,res) =>{
     UserController.googleLogin(req,res)
 })

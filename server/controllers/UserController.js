@@ -4,6 +4,9 @@ const User = require('../models/user')
 const hashPassword = require('../helpers/hashPassword')
 const isEmail = require('../helpers/isEmail')
 const jwt = require('jsonwebtoken')
+const {OAuth2Client} = require('google-auth-library');
+const client = new OAuth2Client(process.env.GOOGLECLIENTID);
+const axios = require('axios')
 
 class UserController {
 
@@ -95,7 +98,47 @@ class UserController {
 
     // google login
     static googleLogin(req,res){
-        
+        // console.log('TOKEN------->' , req.body.googletoken)
+        console.log('GOOGLE CLIENT ID----> ',process.env.GOOGLECLIENTID )
+        let tokenverify = new Promise( (resolve, reject)=>{
+			client.verifyIdToken({
+			idToken: req.body.googletoken,
+			audience: process.env.GOOGLECLIENTID
+			}, (err,result)=>{
+				if(!err){
+					const payload = result.getPayload()
+                    const userid = payload['sub']
+                    // console.log('USER ID---->', userid)
+					resolve(userid)
+				}else{
+					reject(err)
+				}
+			})
+        })
+        .then(userid =>{
+            console.log('test userid--->', userid )
+            axios({
+                method: 'GET',
+                url: `https://www.googleapis.com/oauth2/v3/tokeninfo?id_token=${req.body.googletoken}`
+            })
+             .then(result =>{
+                console.log('RESULT----->' , result)
+                res.status(200).json({
+                    msg: 'Login Google Success',
+                    data: result
+                })
+             })
+             .catch(error =>{
+                res.status(500).json({
+                    msg: 'ERROR - Google Login: ',error
+                })     
+             })
+        })
+        .catch(err =>{
+            res.status(500).json({
+                msg: 'ERROR - Google Login: ',err
+            })
+        })
     }
 }
 

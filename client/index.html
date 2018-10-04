@@ -10,6 +10,8 @@
               crossorigin="anonymous"></script>
     <link rel="stylesheet" type="text/css" href="./asset/custom.css">    
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" crossorigin="anonymous">      
+    <script src="https://apis.google.com/js/platform.js" async defer></script>
+    <meta name="google-signin-client_id" content="742869772361-lnl1vsqavkl2ikpge466ugcvpf5sonh0.apps.googleusercontent.com">
     <title>Wonder Git</title>
 </head>
 <body>
@@ -19,6 +21,7 @@
             <div class="container">
                 <a class="navbar-brand" href="#">HacktivGit</a>
                 <div class="navbar-right">
+                <div class="g-signin2" data-onsuccess="onSignIn"></div>    
                 <img src="https://jessicasuniquegiftshop.com/10587-home_01resp/ice-cream-cone-ornaments.jpg" width="50px"/>
                 <p>esadeli</p>
                 </div>
@@ -53,7 +56,7 @@
     // show all data
     $.ajax({
               method : 'GET',
-              url: 'http://localhost:3004/repos/lists'
+              url: 'http://localhost:3005/repos/lists'
           })
           .done((result)=>{
               let data = result['data']
@@ -83,7 +86,7 @@
         let name = input
         $.ajax({
             method: 'POST',
-            url: `http://localhost:3004/repos/username`,
+            url: `http://localhost:3005/repos/username`,
             data: {
                username: name    
             }
@@ -117,7 +120,7 @@
         let input = $('.search').val()
         $.ajax({
             method: 'POST',
-            url: 'http://localhost:3004/repos/search',
+            url: 'http://localhost:3005/repos/search',
             data: {
                 name: input
             }
@@ -149,7 +152,7 @@
     function getDetails(repoName, username){
         $.ajax({
             method: 'POST',
-            url: 'http://localhost:3004/repos/details',
+            url: 'http://localhost:3005/repos/details',
             data: {
                 name: repoName,
                 username: username
@@ -178,6 +181,32 @@
             )
         })
     }
+
+    // google login
+    function onSignIn(googleUser) {
+        let profile = googleUser.getBasicProfile();
+        // console.log('ID: ' + profile.getId()); // Do not send to your backend! Use an ID token instead.
+        console.log('Name: ' + profile.getName());
+        // console.log('Image URL: ' + profile.getImageUrl());
+        console.log('Email: ' + profile.getEmail()); // This is null if the 'email' scope is not present.
+
+        let id_token = googleUser.getAuthResponse().id_token;
+        // console.log('TOKEN---->', id_token)
+        $.ajax({
+            method: 'POST',
+            url: 'http://localhost:3005/users/googlelogin',
+            data: {
+                googletoken: id_token
+            }
+        })
+        .done(result =>{
+            console.log('RESULT---->', result)
+        })
+        .catch(error =>{
+            console.log('ERROR GOOGLE LOGIN CLIENT: ',error)
+        })
+    }
+
 
     </script>   
 </body>
