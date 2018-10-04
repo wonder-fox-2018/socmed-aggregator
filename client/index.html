@@ -21,9 +21,14 @@
             <div class="container">
                 <a class="navbar-brand" href="#">HacktivGit</a>
                 <div class="navbar-right">
-                <div class="g-signin2" data-onsuccess="onSignIn"></div>    
-                <img src="https://jessicasuniquegiftshop.com/10587-home_01resp/ice-cream-cone-ornaments.jpg" width="50px"/>
-                <p>esadeli</p>
+                    <div class="row">
+                        <div id="logout"><button type="button" onclick= "logout()">Logout</button></div>
+                        <div id="googlelogin">
+                            <div class="g-signin2" data-onsuccess="onSignIn"></div>
+                        </div>
+                        <img src="https://jessicasuniquegiftshop.com/10587-home_01resp/ice-cream-cone-ornaments.jpg" width="50px" height="50px"/>
+                        <p>esadeli</p>
+                    </div>
                 </div>
             </div>
             </nav>
@@ -182,6 +187,12 @@
         })
     }
 
+    function logout(){
+        localStorage.removeItem('token')
+        $('#logout').hide()
+        $('#googlelogin').show()
+    }
+
     // google login
     function onSignIn(googleUser) {
         let profile = googleUser.getBasicProfile();
@@ -200,7 +211,10 @@
             }
         })
         .done(result =>{
-            console.log('RESULT---->', result)
+            // console.log('RESULT---->', result)
+            localStorage.setItem('token',result.token)
+            $('#logout').show()
+            $('#googlelogin').hide()
         })
         .catch(error =>{
             console.log('ERROR GOOGLE LOGIN CLIENT: ',error)

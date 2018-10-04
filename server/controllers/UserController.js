@@ -98,9 +98,7 @@ class UserController {
 
     // google login
     static googleLogin(req,res){
-        // console.log('TOKEN------->' , req.body.googletoken)
-        console.log('GOOGLE CLIENT ID----> ',process.env.GOOGLECLIENTID )
-        let tokenverify = new Promise( (resolve, reject)=>{
+        return new Promise( (resolve, reject)=>{
 			client.verifyIdToken({
 			idToken: req.body.googletoken,
 			audience: process.env.GOOGLECLIENTID
@@ -108,7 +106,6 @@ class UserController {
 				if(!err){
 					const payload = result.getPayload()
                     const userid = payload['sub']
-                    // console.log('USER ID---->', userid)
 					resolve(userid)
 				}else{
 					reject(err)
@@ -116,17 +113,79 @@ class UserController {
 			})
         })
         .then(userid =>{
-            console.log('test userid--->', userid )
             axios({
                 method: 'GET',
                 url: `https://www.googleapis.com/oauth2/v3/tokeninfo?id_token=${req.body.googletoken}`
             })
              .then(result =>{
-                console.log('RESULT----->' , result)
-                res.status(200).json({
-                    msg: 'Login Google Success',
-                    data: result
+                let datafromgoogle = result.data
+                // check if user exist
+                User.findOne({
+                    email: result.data.email
                 })
+                  .then(user =>{
+                      if(user){
+                        // get the jwt token
+                        jwt.sign({
+                            userid: user._id,
+                            name: user.name,
+                            email: user.email
+                        },process.env.SECRETTOKEN, (err,token) =>{
+                            if(!err){
+                                res.status(200).json({
+                                    msg: 'Login via Google success',
+                                    token: token
+                                })
+                            }else{
+                                res.status(500).json({
+                                    msg: 'ERROR: ',err
+                                })
+                            }
+                        })
+                      }else if(user){
+                          let hash = hashPassword(process.env.DEFAULTPASSWORD)
+                          // registration process
+                          User.create({
+                              name: datafromgoogle.name,
+                              email: datafromgoogle.email,
+                              password: hash,
+                              thirdpartylogin: 'yes'
+                          })
+                          .then(user=>{
+                            // get the token
+                            jwt.sign({
+                                userid: user._id,
+                                name: user.name,
+                                email: user.email
+                            },process.env.SECRETTOKEN, (err,token) =>{
+                                if(!err){
+                                    res.status(200).json({
+                                        msg: 'Register via Google success',
+                                        token: token
+                                    })
+                                }else{
+                                    res.status(500).json({
+                                        msg: 'ERROR: ',err
+                                    })
+                                }
+                            })
+                          })
+                          .catch(error=>{
+                            res.status(500).json({
+                                msg: 'ERROR: ',error
+                            })        
+                          })
+                      }
+                  })
+                  .catch(error =>{
+                      res.status(500).json({
+                          msg: 'ERROR: ',error
+                      })
+                  })
+                // res.status(200).json({
+                //     msg: 'Login Google Success',
+                //     data: result.data
+                // })
              })
              .catch(error =>{
                 res.status(500).json({
