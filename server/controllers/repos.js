@@ -110,6 +110,7 @@ module.exports = {
             url: `https://api.github.com/users/${req.params.username}/repos`,
             headers: {
                 'User-Agent': 'request',
+                'Authorization': `token ${process.env.ACCESS_TOKEN}`
             }
         };
 

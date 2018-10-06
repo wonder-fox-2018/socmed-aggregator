@@ -5,9 +5,9 @@
     <title></title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" crossorigin="anonymous">
     <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
-    <script src="https://cdn.rawgit.com/oauth-io/oauth-js/c5af4519/dist/oauth.js"></script>
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css" integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-social/4.12.0/bootstrap-social.min.css">
+    <script src="https://apis.google.com/js/platform.js" async defer></script>
+    <meta name="google-signin-client_id" content="196400388485-sk6245bv6slua0219qk3g2btqiq04nsm.apps.googleusercontent.com">
     <style>
       body {
         padding-top: 65px;
@@ -50,10 +50,6 @@
         width: 100%;
       }
       
-      #github-button, #signout-button {
-        color: black;
-        background-color: white;
-      }
       .transBtn {
         color: black;
         background-color: transparent;
@@ -69,6 +65,14 @@
         color: lightgrey;
         background-color: transparent;
       }
+      #userwelcome {
+        color: white;
+      }
+      #gSignOut {
+        font-size: 15px;
+        padding: 5px 10px;;
+        background-color: white;
+      }
     </style>
   </head>
   <body>
@@ -78,8 +82,10 @@
         <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
           <div class="container">
             <a class="navbar-brand" href="#">HacktivGit</a>
+            <div id='userwelcome' class="ifSignedIn"></div>
             <div class="navbar-right">
-              
+              <div class="g-signin2 ifSignedOut" data-onsuccess="onSignIn"></div>
+              <button class="btn ifSignedIn" id='gSignOut' onclick="signOut()"><b>Sign Out</b></button>
             </div>
           </div>
         </nav>
@@ -87,6 +93,11 @@
 
       <div class="row row-body ">
         <div class="col-md-3 box">
+          <div class="row text-center pb-2 mb-2">
+            <div class="col-1"></div>
+            <div class="col-10 border-bottom"><h6><b>Remaining API Rate:</b></h6><h3 id='ratelimit'></h3></div>
+            <div class="col-1"></div>
+          </div>
           <div class="row mb-4">
             <div class="col-12 text-center" style="font-size:1vw;">
               <button id='allRepo' class="transBtn btn mx-2" title="My Repositories"><i class="fas fa-archive"></i></button>
@@ -104,11 +115,9 @@
           </div>
           <div class="row">
             <div class="col-1"></div>
-            <div class="text-center col-10 border-bottom mb-4"><h4>Featured Users</h4></div>
+            <div class="text-center col-10 border-bottom mb-4"><h5>Followed by <b><i>ismailnagib</i></b></h5></div>
             <div class="col-1"></div>
-            <ul class='col-12' style="list-style-type:none">
-              <li><a href="#" onclick="listByUsername('windiana')">windiana</a></li>
-              <li><a href="#" onclick="listByUsername('dmtrxw')">dmtrxw</a></li>
+            <ul class='col-12' style="list-style-type:none" id='followed'>
             </ul>
           </div>
         </div>
@@ -137,6 +146,7 @@
       
       $('document').ready(function () {
         listAll()
+        listFollowed()
         checkLogin()
       })
 
@@ -175,6 +185,38 @@
         }
       })
 
+      function onSignIn(googleUser) {
+        let id_token = googleUser.getAuthResponse().id_token;
+        $.ajax({
+          url: 'http://localhost:3000/users/gsignin',
+          dataType: 'json',
+          headers: { id_token: id_token }
+        })
+        .done(data => {
+          localStorage.setItem('token', data.token)
+          $('#userwelcome').text("")
+          $('#userwelcome').append(
+            `signed in as <b>${data.name}</b>`
+          )
+          $('.ifSignedIn').show()
+          $('.ifSignedOut').hide()
+        })
+        .fail(err => {
+          $('.ifSignedIn').hide()
+          $('.ifSignedOut').show()
+          console.log(err)
+        })
+      }
+
+      function signOut() {
+        var auth2 = gapi.auth2.getAuthInstance();
+        auth2.signOut().then(function () {
+          localStorage.clear()
+          $('.ifSignedIn').hide()
+          $('.ifSignedOut').show()
+        });
+      }
+
       function checkLogin () {
         $.ajax({
           url: 'http://localhost:3000/users/check',
@@ -185,6 +227,10 @@
           if (data.isLogin) {
             $('.ifSignedIn').show()
             $('.ifSignedOut').hide()
+            $('#userwelcome').text("")
+            $('#userwelcome').append(
+              `signed in as <b>${data.name}</b>`
+            )
           } else {
             $('.ifSignedIn').hide()
             $('.ifSignedOut').show()
@@ -227,8 +273,8 @@
                   </div>
                 </div>`
               )
-              checkLogin()
             })
+            checkLogin()
           } else {
             $('.list').text("")
             $('.list').append(
@@ -282,9 +328,33 @@
               </div>`
             )
           }
-          
         })
         .fail((err) => {
+          console.log(err)
+        })
+      }
+          
+      function listFollowed () {
+        $.ajax({
+          url: 'https://api.github.com/users/ismailnagib/following',
+          dataType: 'json'
+        })
+        .done(data => {
+          $('#followed').text("")
+          data.forEach(datum => {
+            $('#followed').append(
+              `<li><a href='#' onclick='listByUsername("${datum.login}")'>${datum.login}</a></li>`
+            )
+        })
+        })
+        .fail(err => {
+          $('#followed').text("")
+          $('#followed').append(
+            `<div class='text-center'>
+              <i class="fas fa-sad-cry my-4" style='font-size:5vw;'></i>
+              <h6>Sorry, but it seems that the API rate limit exceeded so we can't display the names at this very moment, please come back later</h6>
+            </div>`
+          )
           console.log(err)
         })
       }
@@ -337,12 +407,12 @@
           dataType: 'json',
         })
         .done(data => {
-          if (typeof data.list === 'object') {
+          if (data.list.message) {
             $('.list').text("")
             $('.list').append(
               `<div class='text-center'>
                 <i class="fas fa-sad-cry my-4" style='font-size:10vw;'></i>
-                <h5>Sorry, but it seems that the API rate limit has exceeded so we can't display the data at this very moment, please come back later</h5>
+                <h6>Sorry, but it seems that the API rate limit exceeded so we can't display the repositories owned by <b>${username}</b> at this very moment, please come back later</h6>
               </div>`
             )
           } else {

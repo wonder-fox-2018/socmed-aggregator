@@ -3,7 +3,9 @@ var createError = require('http-errors');
 var express = require('express');
 var path = require('path');
 var logger = require('morgan');
-var cors = require('cors')
+var cors = require('cors');
+var mongoose = require('mongoose')
+mongoose.connect('mongodb://localhost:27017/wonder-socmed-aggregator', { useNewUrlParser: true })
 
 var reposRouter = require('./routes/repos')
 var usersRouter = require('./routes/users')

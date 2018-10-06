@@ -6,6 +6,7 @@ module.exports = (req, res, next) => {
         if (err) {
             next("You are not logged in, please log in to see the data")
         } else {
+            req.userName = decoded.name 
             next()
         }
     })
